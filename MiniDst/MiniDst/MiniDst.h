@@ -258,6 +258,10 @@ public:
    double rf_time1{0};
    double rf_time2{0};
 
+   int NSimSVTHit = 0;
+   int NSimECalHit = 0;
+
+
    // Hodo RAW Hits
    vector<int>    hodo_raw_ix;
    vector<int>    hodo_raw_iy;

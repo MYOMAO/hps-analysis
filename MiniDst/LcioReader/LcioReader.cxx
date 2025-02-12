@@ -6,6 +6,23 @@
 /// to disable the md_output_tree by setting it to nullptr, so it does not write out...
 ///
 #include "LcioReader.h"
+#include "UTIL/LCTOOLS.h"
+#include "TH1D.h"
+
+
+using namespace std ;
+using namespace lcio ;
+
+
+	
+ 
+TH1D * NTrackHis = new TH1D("NTrackHis","",15,-0.5,14.5);
+NTrackHis->GetXaxis()->SetTitle("N KF Tracks");
+NTrackHis->GetYaxis()->SetTitle("Number of Events");
+NTrackHis->GetXaxis()->CenterTitle();
+NTrackHis->GetYaxis()->CenterTitle();
+NTrackHis->GetYaxis()->SetTitleOffset(1.4);
+
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    if(md_Debug > 0) md_Debug = debug_level;
@@ -122,6 +139,15 @@ void LcioReader::SetupLcioDataType() {
    }
 
    col_names = lcio_event->getCollectionNames();
+   cout << "ZZ Spit Out All Existing Collections" << endl;
+   int col_size = col_names->size();
+   for(int q = 0; q < col_size; q++){
+
+	   cout << "Col Index q: " << q << "  col_names = " << col_names->at(q) << endl;
+
+   }
+
+
    if (md_Debug & kDebug_L1) {
       cout << "LCIO Collections found:\n";
       for (string s: *col_names) {
@@ -144,7 +170,11 @@ void LcioReader::SetupLcioDataType() {
       if (use_mc_particles) is_MC_data = true;
       else {
          cout << "LCIO -> Monte Carle data, but no_mc_particle flag. MCParticles not written. \n";
+		 cout << "Made ZZ MODI -> OK MODIED" << endl;
       }
+
+	  cout << "Checking MCParrticle Collection by ZZ" << endl;
+
 
       // Check the scoring planes.
       for (int i = 0; i < scoring_planes.size(); ++i) {
@@ -367,6 +397,8 @@ bool LcioReader::Process(Long64_t entry){
    /// Process all the information from the current LCIO event.
    Clear();  // Clear all the vectors that contain data, so we can push_back on them again.
 
+   cout << "Make is_MC_data True Now" << endl;
+   is_MC_data = true;
    /////////////////////////////////////////////////////////////////////////////////////////////
    ///
    /// Event Header
@@ -376,6 +408,34 @@ bool LcioReader::Process(Long64_t entry){
    run_number = lcio_event->getRunNumber();
    event_number = lcio_event->getEventNumber();
    time_stamp = lcio_event->getTimeStamp();
+
+
+
+
+   cout << "ZZ Spit Out All TrackerHit Collections -> Maurik -> Modied NSimSVTHit" << endl;
+   EVENT::LCCollection *TrackerHits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("TrackerHits"));
+//   LCTOOLS::printTrackerHits( TrackerHits );
+  // cout << "DONE Tracker Hits" << endl;
+
+  // LCTOOLS::printSimTrackerHits( TrackerHits );
+   cout << "DONE Sim Tracker Hits" << endl;
+
+    
+   NSimSVTHit =  TrackerHits->getNumberOfElements() ;
+
+   cout << "nTrackerHits = " << NSimSVTHit << endl;
+ 
+   cout << "ZZ Spit Out All EcalHits Collections -> Maurik" << endl;
+
+   EVENT::LCCollection *EcalHits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalHits"));
+  // LCTOOLS::printCalorimeterHits( EcalHits );
+  // cout << "DONE ECAL Hits" << endl;
+
+  // LCTOOLS::printSimCalorimeterHits( EcalHits );
+  // cout << "DONE Sim ECAL Hits" << endl;
+
+   NSimECalHit =  EcalHits->getNumberOfElements() ;
+   cout << "nEcalHits = " << NSimECalHit << endl;
 
    // The following quantities from the LCIO header were set for 2016 data, but not consistently.
    // Currently for 2019 data they are all 0. These should actually be booleans not ints.
@@ -457,6 +517,8 @@ bool LcioReader::Process(Long64_t entry){
          }
       } // for each trigger_bank
    } // is_2016_data
+ 
+
    if (is_2019_data && !is_MC_data) {
       EVENT::LCCollection *tsbank_data
             = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("TSBank"));
@@ -492,6 +554,9 @@ bool LcioReader::Process(Long64_t entry){
    ///
    ////////////////////////////////////////////////////////////////////////////////////////////////
 
+   //cout << "Passing 1 Now" << endl;
+
+
    if (use_hodo_raw_hits){
       auto ecal_raw_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("HodoscopeReadoutHits"));
 
@@ -509,7 +574,7 @@ bool LcioReader::Process(Long64_t entry){
          hodo_raw_adc.push_back(raw_hit_adc_short);
       }
    }
-
+   //cout << "Passing 2 Now" << endl;
    /// Parse the "HodoCalHits"
    if (use_hodo_hits){
       EVENT::LCCollection *hodo_hits =
@@ -531,6 +596,7 @@ bool LcioReader::Process(Long64_t entry){
          hodo_hit_layer.push_back(hodo_hit_field_decoder["layer"]);
       }
    }
+   //cout << "Passing 3 Now" << endl;
 
    /// Parse the Hodo Genergic Object: HodoGenericClusters
    if (use_hodo_clusters){
@@ -550,6 +616,7 @@ bool LcioReader::Process(Long64_t entry){
          hodo_cluster_time.push_back(gclus_time->getDoubleVal(i));
       }
    }
+   //cout << "Passing 4 Now" << endl;
 
    ////////////////////////////////////////////////////////////////////////////////////////////////
    ///
@@ -586,6 +653,7 @@ bool LcioReader::Process(Long64_t entry){
          ecal_raw_adc.push_back(raw_hit_adc_short);
       }
    }
+   //cout << "Passing 5 Now" << endl;
 
    /// Parse the "EcalCalHits"
    if (use_ecal_hits) {
@@ -629,6 +697,7 @@ bool LcioReader::Process(Long64_t entry){
          }
       }
    }
+   //cout << "Passing 6 Now" << endl;
 
    /// Parse "EcalClustersCorr" -- corrected Ecal clusters.
    if (use_ecal_cluster) {
@@ -681,6 +750,7 @@ bool LcioReader::Process(Long64_t entry){
          ecal_cluster_seed_iy.push_back(ecal_hit_field_decoder["iy"]);
       }
    }
+   //cout << "Passing 7 Now" << endl;
 
    /// Parse "EcalClusters" -- uncorrected Ecal clusters.
    if (use_ecal_cluster_uncor) {
@@ -733,6 +803,7 @@ bool LcioReader::Process(Long64_t entry){
          ecal_cluster_uncor_seed_iy.push_back(ecal_hit_field_decoder["iy"]);
       }
    }
+   //cout << "Passing 8 Now" << endl;
 
    ////////////////////////////////////////////////////////////////////////////////////////////////
    ///
@@ -784,33 +855,78 @@ bool LcioReader::Process(Long64_t entry){
          }
       }
    }
+   //cout << "Passing 9 Now" << endl;
 
    /// Parse the "RotatedHelicalTrackHits"       - These are the hits used by the GBL tracker.
    /// and "StripClusterer_SiTrackerHitStrip1D"  - These are the hits used by the KF tracker.
+
+   use_svt_hits = true;
+   cout << "ZZ - use_svt_hits Now from Maurik" << endl;
+
+   int colsize = svt_hit_collections.size();
+   cout << "ZZ - colsize ok: " << colsize << endl;
+
+   for(int q = 0; q < colsize; q++){
+
+	   cout <<  "q = " << q <<  "    svt_hit_collections[q] " << svt_hit_collections[q] << endl;
+
+   }
+
+
    if (use_svt_hits) {
+
       int i_svt_hit_type = -1;
-      for( auto collection_name: svt_hit_collections) {
+   //   for( auto collection_name: svt_hit_collections) {
          i_svt_hit_type++;
-         EVENT::LCCollection *tracker_hits = lcio_event->getCollection(collection_name); //
-         for (int i_svt_hit = 0; i_svt_hit < tracker_hits->getNumberOfElements(); ++i_svt_hit) {
+		// cout << "collection_name: " << collection_name << endl;
+         EVENT::LCCollection *tracker_hits = lcio_event->getCollection("TrackerHits"); //
+     
+		 cout << "Pass tracker_hits: 1" << endl;
+		 for (int i_svt_hit = 0; i_svt_hit < tracker_hits->getNumberOfElements(); ++i_svt_hit) {
+		 cout << "Pass tracker_hits: 2" << endl;
+			 
             auto lcio_svt_hit =
                   dynamic_cast<IMPL::TrackerHitImpl *>(tracker_hits->getElementAt(i_svt_hit));
             svt_hit_to_index_map[lcio_svt_hit] = i_svt_hit;
 
+			 cout << "Pass tracker_hits: 3" << endl;
+			 cout << "Pass tracker_hits: 3 -> Modi" << endl;
+	
             svt_hit_type.push_back(i_svt_hit_type);
-            svt_hit_time.push_back(lcio_svt_hit->getTime());
+			 cout << "Pass tracker_hits: 3.1" << endl;
+			
+			//svt_hit_time.push_back(lcio_svt_hit->getTime());
+			 cout << "Pass tracker_hits: 3.2 -> Remove Time" << endl;
+	 
+;
+			 cout << "Pass tracker_hits: 3.25 ->  raw_hits test" << endl;
+            EVENT::LCObjectVec raw_hits2 = lcio_svt_hit->getRawHits();
+		
+				
+			 cout << "Pass tracker_hits: 3.28 -> raw_hits pass" << endl;
+
+
             const double *pos = lcio_svt_hit->getPosition();
+			 cout << "Pass tracker_hits: 3.3" << endl;
+			
             svt_hit_x.push_back(pos[0]);
             svt_hit_y.push_back(pos[1]);
             svt_hit_z.push_back(pos[2]);
+			 cout << "Pass tracker_hits: 3.4" << endl;
+			
             svt_hit_edep.push_back(lcio_svt_hit->getEDep()); // Not in 2016 data.
-            const vector<float> cov_mat = lcio_svt_hit->getCovMatrix();
+			 cout << "Pass tracker_hits: 3.5" << endl;
+           
+			const vector<float> cov_mat = lcio_svt_hit->getCovMatrix();
+			 cout << "Pass tracker_hits: 4" << endl;
+			
             svt_hit_cxx.push_back(cov_mat[0]);
             svt_hit_cxy.push_back(cov_mat[1]);
             svt_hit_cyy.push_back(cov_mat[2]);
             svt_hit_cxz.push_back(cov_mat[3]);
             svt_hit_cyz.push_back(cov_mat[4]);
             svt_hit_czz.push_back(cov_mat[5]);
+			 cout << "Pass tracker_hits: 5" << endl;
 
             //ULong64_t value2 = (ULong64_t(lcio_svt_hit->getCellID0()) & 0xffffffff) |
             //                   (ULong64_t(lcio_svt_hit->getCellID1()) << 32);
@@ -818,12 +934,16 @@ bool LcioReader::Process(Long64_t entry){
             EVENT::LCObjectVec raw_hits = lcio_svt_hit->getRawHits();
             vector<int> raw_index;
             vector<int> raw_other;
+			 cout << "Pass tracker_hits: 6" << endl;
+			
             int layer;
             int module;
             vector<int> strip;
             for (int i_hit = 0; i_hit < raw_hits.size(); ++i_hit) {
                auto lcio_raw_hit = static_cast<EVENT::TrackerRawData *>(raw_hits.at(i_hit));
                if(use_svt_raw_hits){
+		   	   cout << "Pass tracker_hits: 7" << endl;
+				   
                   auto hit_index_ptr = svt_raw_hit_to_index_map.find(lcio_raw_hit);
                   if( hit_index_ptr != svt_raw_hit_to_index_map.end() ) {
                      /// We try to disambiguate the two possible fits. The only handle we have is time.
@@ -842,23 +962,35 @@ bool LcioReader::Process(Long64_t entry){
                      raw_index.push_back(-1);
                      raw_other.push_back(-1);
                   }
+				 cout << "Pass tracker_hits: 8" << endl;
+				  
                }
                ULong64_t value = (ULong64_t(lcio_raw_hit->getCellID0()) & 0xffffffff) |
                                  (ULong64_t(lcio_raw_hit->getCellID1()) << 32);
                raw_svt_hit_decoder.setValue(value);
 
+			
+			   cout << "Pass tracker_hits: 9" << endl;
+			   
                layer = raw_svt_hit_decoder["layer"];
                module = raw_svt_hit_decoder["module"];
                strip.push_back(raw_svt_hit_decoder["strip"]);
             }
+			
+			cout << "Pass tracker_hits: 10" << endl;
+			
             svt_hit_raw_index.push_back(raw_index);
             svt_hit_raw_other.push_back(raw_other);
             svt_hit_layer.push_back(layer);
             svt_hit_module.push_back(module);
             svt_hit_strip.push_back(strip);
          }
-      }
+		//}
+			
+		 cout << "Pass tracker_hits: 11" << endl;
+   
    }
+   //cout << "Passing 10 Now" << endl;
 
    // GBL Track collections: GBLTracks <= (TrackDataRelations)=< TrackData
    //                                  -(GBLKinkDataRelations)-> GBLKinkData
@@ -870,6 +1002,12 @@ bool LcioReader::Process(Long64_t entry){
    /// TRACKS
    ///
    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+   cout << "I plan to simply enable tracking here -> First Step, Cross Check N_Tracks" << endl;
+   EVENT::LCCollection *kf_tracks2{nullptr};  
+   kf_tracks2 = lcio_event->getCollection("KalmanFullTracks");
+   track_n_kf2 = kf_tracks2->getNumberOfElements();
+   NTrackHis->Fill(track_n_kf2);
 
    if (use_kf_tracks || use_gbl_tracks || use_matched_tracks ||
        use_kf_particles || use_gbl_particles) {
@@ -1167,6 +1305,7 @@ bool LcioReader::Process(Long64_t entry){
          }
       }
    } // End if(write_tracks)
+   //cout << "Passing 11 Now" << endl;
 
    ////////////////////////////////////////////////////////////////////////////////////////////////
    ///
@@ -1204,6 +1343,7 @@ bool LcioReader::Process(Long64_t entry){
          }
       }
    }
+   //cout << "Passing 12 Now" << endl;
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
    ///
@@ -1316,6 +1456,7 @@ bool LcioReader::Process(Long64_t entry){
       /// ADD ECal Truth for MC data.
       ///
       ///////////////////////////////////////////////////////////////////////////////////////////////
+   //cout << "Passing 13 Now" << endl;
 
       vector<int> ecal_truth_to_hit_index;  // A table for each truth hit pointing to the ecal hit.
       if(use_ecal_hits && use_ecal_hits_truth) {
@@ -1458,6 +1599,7 @@ bool LcioReader::Process(Long64_t entry){
          }
       }
    }
+   //cout << "Passing 14 Now" << endl;
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
    ///

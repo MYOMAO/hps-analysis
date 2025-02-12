@@ -63,6 +63,10 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("rf_time2", &rf_time2);
    branch_map_try_emplace("track_n_gbl", &track_n_gbl);
 
+   branch_map_try_emplace("NSimSVTHit", &NSimSVTHit);
+   branch_map_try_emplace("NSimECalHit", &NSimECalHit);
+
+
    branch_map_try_emplace("hodo_raw_ix", &hodo_raw_ix, use_hodo_raw_hits | use_all );
    branch_map_try_emplace("hodo_raw_iy", &hodo_raw_iy, use_hodo_raw_hits | use_all );
    branch_map_try_emplace("hodo_raw_hole", &hodo_raw_hole, use_hodo_raw_hits | use_all );
