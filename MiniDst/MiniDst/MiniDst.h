@@ -118,6 +118,9 @@ public:
    int Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits=false);
    int Add_Particle(MiniDst &event_in, int i_particle);
 
+   //
+   void Print(	Option_t *	option = "") const override;
+
 public:
 
    enum Debug_codes {
@@ -257,10 +260,6 @@ public:
    unsigned int ext_trigger{0}; // Ext trigger bits. For 2019 - un-prescaled bits, N/A for 2016
    double rf_time1{0};
    double rf_time2{0};
-
-   int NSimSVTHit = 0;
-   int NSimECalHit = 0;
-
 
    // Hodo RAW Hits
    vector<int>    hodo_raw_ix;
