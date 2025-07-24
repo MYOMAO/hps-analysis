@@ -131,12 +131,7 @@ void LcioReader::SetupLcioDataType() {
          cout << s << endl;
       }
    }
-  
-   cout << "ZZ Modi -> LCIO Collections found:\n";
-   
-   for (string s: *col_names) {
-	   cout << s << endl;      
-   }
+
 
 
 // In the current reco of data, 2019 LCIO files have both the TriggerBank and the TSBank, so this cannot
